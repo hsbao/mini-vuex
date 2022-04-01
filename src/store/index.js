@@ -5,7 +5,13 @@ Vue.use(Vuex)
 
 const store = new Vuex.Store({
   state: {
-    name: 'abao'
+    name: 'abao',
+    age: 27
+  },
+  getters: {
+    getAge(state) {
+      return state.age
+    }
   },
   actions: {
     changeName({ commit }, payload) {
