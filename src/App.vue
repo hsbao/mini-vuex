@@ -1,5 +1,7 @@
 <template>
-  <div id="app">122</div>
+  <div id="app">
+    <div>{{ $store.state.name }}</div>
+  </div>
 </template>
 
 <script>
