@@ -25,11 +25,16 @@ const store = new Vuex.Store({
     }
   },
   modules: {
-    subModule: {
-      state: {},
-      getters: {},
-      actions: {},
-      mutations: {}
+    a: {
+      state: { name: 'a' },
+      modules: {
+        c: {
+          state: { name: 'c' }
+        }
+      }
+    },
+    b: {
+      state: { name: 'b' }
     }
   }
 })
