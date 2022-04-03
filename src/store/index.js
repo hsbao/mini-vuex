@@ -3,7 +3,7 @@ import Vuex from '../vuex'
 
 Vue.use(Vuex)
 
-const store = new Vuex.Store({
+let store = new Vuex.Store({
   namespace: true,
   state: {
     name: 'abao',
@@ -39,6 +39,12 @@ const store = new Vuex.Store({
       namespace: true,
       state: { name: 'b' }
     }
+  }
+})
+
+store.registerModule(['e'], {
+  state: {
+    name: 'eeeeee'
   }
 })
 

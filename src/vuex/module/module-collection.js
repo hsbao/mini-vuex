@@ -20,7 +20,7 @@ export default class ModuleCollection {
 
   register(path, rootModule) {
     let newModule = new Module(rootModule)
-
+    rootModule.rawModule = newModule // 这里是为了给registerModule手动注册模块的时候使用的
     // 第一次注册表示最外层的根模块
     if (path.length === 0) {
       this.root = newModule

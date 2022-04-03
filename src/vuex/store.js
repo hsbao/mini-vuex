@@ -52,6 +52,9 @@ function installModule(store, rootState, path, module) {
 
 function resetStoreVm(store, state) {
   const wrappedGetters = store._wrappedGetters
+
+  const oldVM = store._vm
+
   let computed = {}
   store.getters = {}
 
@@ -70,6 +73,12 @@ function resetStoreVm(store, state) {
     },
     computed
   })
+
+  if (oldVM) {
+    Vue.nextTick(() => {
+      oldVM.$destroy()
+    })
+  }
 }
 class Store {
   constructor(options) {
@@ -152,6 +161,22 @@ class Store {
 
   get state() {
     return this._vm._data.$$state
+  }
+
+  // 手动注册新的模块
+  registerModule(path, rawModule) {
+    if (typeof path === 'string') {
+      path = [path]
+    }
+    // 1. 调用注册模块的方法
+    this._modules.register(path, rawModule)
+
+    // 2. 安装模块
+    installModule(this, this.state, path, rawModule.rawModule)
+
+    // 更新所有状态
+    resetStoreVm(this, this.state)
+    console.log(this.state)
   }
 }
 
