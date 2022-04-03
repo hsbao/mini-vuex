@@ -4,6 +4,13 @@ import ModuleCollection from './module/module-collection'
 
 let Vue
 
+// 根据path，从store里取到最新的state
+function getState(store, path) {
+  return path.reduce((newState, current) => {
+    return newState[current]
+  }, store.state)
+}
+
 /**
  * 将模块上的属性，定义到store上
  * @param {*} store 当前vuex的实例
@@ -14,7 +21,7 @@ let Vue
 function installModule(store, rootState, path, module) {
   // 注册mutation，action事件时，需要注册到对应的命名空间中，path就是所有的路径
   let namespace = store._modules.getNamespace(path)
-  console.log('namespace---', namespace)
+  // console.log('namespace---', namespace)
   // 如果是子模块，需要将子模块的状态定义到根模块上
   if (path.length > 0) {
     let parent = path.slice(0, -1).reduce((memo, current) => {
@@ -28,7 +35,18 @@ function installModule(store, rootState, path, module) {
     store._mutations[fullType] = store._mutations[fullType] || []
     // 多层级modules可能有多个，所以放到数组里
     store._mutations[fullType].push((payload) => {
-      mutation.call(store, module.state, payload)
+      mutation.call(store, getState(store, path), payload)
+
+      // 修改数据的时候，调用subscribe订阅的事件
+      store._subscribes.forEach((sub) => {
+        sub(
+          {
+            mutation,
+            type
+          },
+          store.state
+        )
+      })
     })
   })
   module.forEachActions((action, type) => {
@@ -149,6 +167,10 @@ class Store {
 
     // 3. 将处理好的state放到vue的实例中
     resetStoreVm(this, state)
+
+    // 插件：每个插件都是一个函数，接收当前store，并执行
+    this._subscribes = []
+    ;(options.plugins || []).forEach((plugin) => plugin(this))
   }
   // this.$store.commit('changeName', 'name')
   commit = (type, payload) => {
@@ -177,6 +199,15 @@ class Store {
     // 更新所有状态
     resetStoreVm(this, this.state)
     console.log(this.state)
+  }
+
+  // 替换最新state
+  replaceState(newSatte) {
+    this._vm._data.$$state = newSatte
+  }
+
+  subscribe(fn) {
+    this._subscribes.push(fn)
   }
 }
 
