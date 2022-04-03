@@ -12,6 +12,9 @@ let Vue
  * @param {*} module 当前模块：state, getters, actions, mutations
  */
 function installModule(store, rootState, path, module) {
+  // 注册mutation，action事件时，需要注册到对应的命名空间中，path就是所有的路径
+  let namespace = store._modules.getNamespace(path)
+  console.log('namespace---', namespace)
   // 如果是子模块，需要将子模块的状态定义到根模块上
   if (path.length > 0) {
     let parent = path.slice(0, -1).reduce((memo, current) => {
@@ -21,15 +24,17 @@ function installModule(store, rootState, path, module) {
   }
 
   module.forEachMutations((mutation, type) => {
-    store._mutations[type] = store._mutations[type] || []
+    const fullType = namespace + type
+    store._mutations[fullType] = store._mutations[fullType] || []
     // 多层级modules可能有多个，所以放到数组里
-    store._mutations[type].push((payload) => {
+    store._mutations[fullType].push((payload) => {
       mutation.call(store, module.state, payload)
     })
   })
   module.forEachActions((action, type) => {
-    store._actions[type] = store._actions[type] || []
-    store._actions[type].push((payload) => {
+    const fullType = namespace + type
+    store._actions[fullType] = store._actions[fullType] || []
+    store._actions[fullType].push((payload) => {
       action.call(store, store, payload)
     })
   })

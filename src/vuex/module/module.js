@@ -7,6 +7,10 @@ export default class Module {
     this.state = rootModule.state
   }
 
+  get namespace() {
+    return this._rawModule.namespace
+  }
+
   // 根据模块名称找到对应的子模块
   getChild(moduleName) {
     return this._children[moduleName]

@@ -4,6 +4,7 @@ import Vuex from '../vuex'
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
+  namespace: true,
   state: {
     name: 'abao',
     age: 27
@@ -29,11 +30,13 @@ const store = new Vuex.Store({
       state: { name: 'a' },
       modules: {
         c: {
+          namespace: true,
           state: { name: 'c' }
         }
       }
     },
     b: {
+      namespace: true,
       state: { name: 'b' }
     }
   }
