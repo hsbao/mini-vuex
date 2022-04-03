@@ -34,7 +34,7 @@ let store = new Vuex.Store({
     }
   },
   actions: {
-    changeName({ commit }, payload) {
+    dispatchChangeName({ commit }, payload) {
       console.log(commit)
       commit('changeName', payload)
     }
