@@ -15,12 +15,21 @@ const store = new Vuex.Store({
   },
   actions: {
     changeName({ commit }, payload) {
+      console.log(commit)
       commit('changeName', payload)
     }
   },
   mutations: {
     changeName(state, payload) {
       state.name = payload
+    }
+  },
+  modules: {
+    subModule: {
+      state: {},
+      getters: {},
+      actions: {},
+      mutations: {}
     }
   }
 })

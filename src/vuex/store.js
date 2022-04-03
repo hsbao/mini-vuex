@@ -5,7 +5,8 @@ let Vue
 
 class Store {
   constructor(options) {
-    const state = options.state
+    const state = options.state || {}
+    const mutations = options.mutations || []
 
     // vuex中的getter其实就是计算属性
     this.getters = {}
@@ -40,6 +41,30 @@ class Store {
       },
       computed
     })
+
+    /**
+     * mutations和actions，是基于发布订阅模式
+     * 先将用户定义的mutions和actions保存起来
+     * 调用commit的时候，就找到订阅的mutations中的方法
+     * 调用dispatch的时候，就找到订阅的actions中的方法
+     */
+    this._mutations = {}
+    forEach(mutations, (fn, type) => {
+      this._mutations[type] = (payload) => fn.call(this, this.state, payload)
+    })
+
+    this._actions = {}
+    forEach(options.actions, (fn, type) => {
+      this._actions[type] = (payload) => fn.call(this, this, payload)
+    })
+  }
+  // this.$store.commit('changeName', 'name')
+  commit = (type, payload) => {
+    this._mutations[type](payload)
+  }
+  // this.$store.dispatch('changeName', 'name')
+  dispatch = (type, payload) => {
+    this._actions[type](payload)
   }
 
   get state() {
