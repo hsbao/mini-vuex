@@ -13,6 +13,7 @@ export default {
   name: 'App',
   methods: {
     commitChangeName() {
+      // this.$store.state.name = 112
       this.$store.commit('changeName', 'hongshibao1')
     },
     dispatchChangeName() {

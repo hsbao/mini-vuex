@@ -21,6 +21,7 @@ function persists(store) {
 }
 
 let store = new Vuex.Store({
+  strict: true, // 严格模式，只能通过commit，触发mutations来修改state，其他的方式都不可以
   namespace: true,
   plugins: [persists],
   state: {

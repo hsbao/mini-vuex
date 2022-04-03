@@ -27,7 +27,9 @@ function installModule(store, rootState, path, module) {
     let parent = path.slice(0, -1).reduce((memo, current) => {
       return memo[current] // 遍历path，从根模块开始，找到当前模块的父模块
     }, rootState)
-    Vue.set(parent, path[path.length - 1], module.state)
+    store._waitCommitting(() => {
+      Vue.set(parent, path[path.length - 1], module.state)
+    })
   }
 
   module.forEachMutations((mutation, type) => {
@@ -35,7 +37,10 @@ function installModule(store, rootState, path, module) {
     store._mutations[fullType] = store._mutations[fullType] || []
     // 多层级modules可能有多个，所以放到数组里
     store._mutations[fullType].push((payload) => {
-      mutation.call(store, getState(store, path), payload)
+      //
+      store._waitCommitting(() => {
+        mutation.call(store, getState(store, path), payload)
+      })
 
       // 修改数据的时候，调用subscribe订阅的事件
       store._subscribes.forEach((sub) => {
@@ -91,6 +96,20 @@ function resetStoreVm(store, state) {
     },
     computed
   })
+
+  // 如果是严格模式，深度监听state是变化，里面的属性一发生变化，同步触发回调
+  if (store.strict) {
+    store._vm.$watch(
+      () => store._vm._data.$$state,
+      () => {
+        console.assert(store._committing, '不能绕过mutations更改state')
+      },
+      {
+        deep: true,
+        sync: true
+      }
+    )
+  }
 
   if (oldVM) {
     Vue.nextTick(() => {
@@ -162,6 +181,13 @@ class Store {
     this._mutations = {}
     this._actions = {}
     this._wrappedGetters = {}
+    this._subscribes = []
+    this.strict = options.strict // 严格模式，true为严格模式
+    this.plugins = options.plugins || [] // 插件
+
+    // 同步的watc
+    this._committing = false
+
     installModule(this, state, [], this._modules.root)
     console.log(state)
 
@@ -169,9 +195,15 @@ class Store {
     resetStoreVm(this, state)
 
     // 插件：每个插件都是一个函数，接收当前store，并执行
-    this._subscribes = []
-    ;(options.plugins || []).forEach((plugin) => plugin(this))
+    this.plugins.forEach((plugin) => plugin(this))
   }
+  _waitCommitting(fn) {
+    let committing = this._committing
+    this._committing = true
+    fn()
+    this._committing = committing
+  }
+
   // this.$store.commit('changeName', 'name')
   commit = (type, payload) => {
     this._mutations[type].forEach((fn) => fn(payload))
@@ -202,8 +234,10 @@ class Store {
   }
 
   // 替换最新state
-  replaceState(newSatte) {
-    this._vm._data.$$state = newSatte
+  replaceState(newState) {
+    this._waitCommitting(() => {
+      this._vm._data.$$state = newState
+    })
   }
 
   subscribe(fn) {
